@@ -4,28 +4,13 @@ set -euo pipefail
 # ================================
 # VERIFICA PYTHON3, PIP E VENV
 # ================================
-echo "Verificando Python3..."
+echo "Verificando Python3, pip e venv..."
 
-# Verifica Python3
-if ! command -v python3 >/dev/null 2>&1; then
-    echo "Erro: Python3 não encontrado. Instale antes de continuar."
-    exit 1
-fi
+# Atualiza repositórios e instala todos os pacotes essenciais de uma vez
+sudo apt update
+sudo apt install -y python3 python3-pip python3-venv python3-distutils python3-setuptools
 
-# Instala pip se não existir
-if ! python3 -m pip --version >/dev/null 2>&1; then
-    echo "pip não encontrado. Instalando python3-pip..."
-    sudo apt update
-    sudo apt install -y python3-pip
-fi
-
-# Instala venv se não existir
-if ! python3 -m venv --help >/dev/null 2>&1; then
-    echo "python3-venv não encontrado. Instalando pacote correspondente..."
-    PY_VER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-    sudo apt update
-    sudo apt install -y python${PY_VER}-venv python${PY_VER}-distutils
-fi
+echo "Python3, pip e venv instalados e prontos para uso."
 
 # ================================
 # REMOVE VENV TEMPORÁRIO ANTIGO
