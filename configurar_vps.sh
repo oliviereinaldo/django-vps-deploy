@@ -5,17 +5,28 @@ set -euo pipefail
 # VERIFICA DEPENDÊNCIAS MÍNIMAS
 # ================================
 echo "Verificando Python3 e Django..."
+
+# Verifica Python3
 if ! command -v python3 >/dev/null 2>&1; then
     echo "Erro: Python3 não encontrado. Instale antes de continuar."
     exit 1
 fi
 
-# Verifica Django, tenta instalar se não existir
+# Verifica pip
+if ! python3 -m pip --version >/dev/null 2>&1; then
+    echo "pip não encontrado. Instalando pip..."
+    # Para Ubuntu/Debian
+    sudo apt update
+    sudo apt install -y python3-pip
+fi
+
+# Verifica Django
 if ! python3 -m django --version >/dev/null 2>&1; then
     echo "Django não encontrado. Instalando temporariamente para gerar SECRET_KEY..."
     python3 -m pip install --user django
 fi
-echo "Python3 e Django disponíveis."
+
+echo "Python3, pip e Django disponíveis."
 
 # ================================
 # CRIA .env INTERATIVO SE NÃO EXISTIR
