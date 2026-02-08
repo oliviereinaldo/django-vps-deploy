@@ -144,7 +144,7 @@ NGINX_CONF="/etc/nginx/sites-available/${DOMINIO}"
 # ================================
 # CRIA BANCO DE DADOS E USUÁRIO MYSQL
 # ================================
-echo "Verificando MySQL..."
+echo "Verificando MySQL e dependências de desenvolvimento..."
 
 # Instala MySQL se não existir
 if ! command -v mysql >/dev/null 2>&1; then
@@ -154,6 +154,11 @@ if ! command -v mysql >/dev/null 2>&1; then
     sudo systemctl start mysql
     sudo systemctl enable mysql
 fi
+
+# Instala dependências necessárias para compilar mysqlclient
+echo "Instalando pacotes de desenvolvimento para mysqlclient..."
+sudo apt update
+sudo apt install -y default-libmysqlclient-dev build-essential pkg-config
 
 # Cria banco e usuário usando sudo
 echo "Criando banco e usuário MySQL..."
