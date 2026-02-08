@@ -10,9 +10,9 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
-# Verifica se pip está disponível
-if ! python3 -m pip --version >/dev/null 2>&1; then
-    echo "pip não encontrado. Instalando pip..."
+# Verifica se pip e venv estão disponíveis
+if ! python3 -m pip --version >/dev/null 2>&1 || ! python3 -m venv --help >/dev/null 2>&1; then
+    echo "pip ou venv não encontrados. Instalando python3-pip e python3-venv..."
     sudo apt update
     sudo apt install -y python3-pip python3-venv
 fi
