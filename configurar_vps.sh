@@ -4,50 +4,46 @@ set -euo pipefail
 # ================================
 # VERIFICA DEPENDÊNCIAS MÍNIMAS
 # ================================
-echo "Verificando Python3 e Django..."
-
-# Verifica Python3
+echo "Verificando Python3..."
 if ! command -v python3 >/dev/null 2>&1; then
     echo "Erro: Python3 não encontrado. Instale antes de continuar."
     exit 1
 fi
 
-# Verifica pip
+# Verifica se pip está disponível
 if ! python3 -m pip --version >/dev/null 2>&1; then
     echo "pip não encontrado. Instalando pip..."
-    # Para Ubuntu/Debian
     sudo apt update
-    sudo apt install -y python3-pip
+    sudo apt install -y python3-pip python3-venv
 fi
-
-# Verifica Django
-if ! python3 -m django --version >/dev/null 2>&1; then
-    echo "Django não encontrado. Instalando temporariamente para gerar SECRET_KEY..."
-    python3 -m pip install --user django
-fi
-
-echo "Python3, pip e Django disponíveis."
 
 # ================================
-# CRIA .env INTERATIVO SE NÃO EXISTIR
+# CRIA VENV TEMPORÁRIO PARA DJANGO
+# ================================
+TEMP_VENV="./venv_temp"
+python3 -m venv "$TEMP_VENV"
+PIP_TEMP="$TEMP_VENV/bin/pip"
+PYTHON_TEMP="$TEMP_VENV/bin/python"
+
+# ================================
+# INSTALA DJANGO NO VENV TEMPORÁRIO
+# ================================
+"$PIP_TEMP" install --upgrade pip
+"$PIP_TEMP" install django
+
+# ================================
+# CRIA .ENV INTERATIVO SE NÃO EXISTIR
 # ================================
 if [ ! -f ".env" ]; then
     echo "Criando .env interativo..."
 
-    # Loop até que o usuário confirme os valores
     while true; do
-        # Pergunta apenas as variáveis essenciais
         read -rp "Nome do site (NOME_SITE): " NOME_SITE
         read -rp "Domínio principal (DOMINIO): " DOMINIO
-
-        # Autocompleta DOMINIO_WWW
         DOMINIO_WWW="www.$DOMINIO"
         echo "Domínio www definido automaticamente como: $DOMINIO_WWW"
-
-        # Pergunta e-mail para Certbot
         read -rp "E-mail para Certbot (EMAIL_CERTBOT): " EMAIL_CERTBOT
 
-        # Mostra resumo para conferência
         echo
         echo "==== Resumo das variáveis inseridas ===="
         echo "Nome do site      : $NOME_SITE"
@@ -66,22 +62,18 @@ if [ ! -f ".env" ]; then
         fi
     done
 
-    # Define valores padrão para banco e Django (geração automática)
     PROJETO="core"
     APP="principal"
     SERVICE_NAME="$NOME_SITE"
-
     DB_NAME="${NOME_SITE}_db"
     DB_USER="usr_${NOME_SITE}"
-    DB_PASS=$(openssl rand -base64 16)  # senha aleatória
-
+    DB_PASS=$(openssl rand -base64 16)
     MYSQL_ROOT_USER="root"
-    MYSQL_ROOT_PASS=$(openssl rand -base64 16)  # senha root aleatória
+    MYSQL_ROOT_PASS=$(openssl rand -base64 16)
 
-    # Gera SECRET_KEY do Django
-    SECRET_KEY_DJANGO=$(python3 -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
+    # Gera SECRET_KEY do Django usando venv temporário
+    SECRET_KEY_DJANGO=$("$PYTHON_TEMP" -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
 
-    # Cria o arquivo .env
     cat > .env <<EOF
 # Variáveis obrigatórias
 NOME_SITE=$NOME_SITE
@@ -107,12 +99,16 @@ MYSQL_ROOT_PASS=$MYSQL_ROOT_PASS
 SECRET_KEY_DJANGO=$SECRET_KEY_DJANGO
 EOF
 
-    echo
     echo ".env criado com sucesso!"
 fi
 
 # ================================
-# CARREGA VARIÁVEIS DO .env
+# REMOVE VENV TEMPORÁRIO
+# ================================
+rm -rf "$TEMP_VENV"
+
+# ================================
+# CARREGA VARIÁVEIS DO .ENV
 # ================================
 export $(grep -v '^#' .env | xargs)
 
