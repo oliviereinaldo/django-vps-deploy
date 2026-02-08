@@ -321,10 +321,9 @@ NGINX_AVAILABLE="/etc/nginx/sites-available"
 NGINX_ENABLED="/etc/nginx/sites-enabled"
 NGINX_CONF="${NGINX_AVAILABLE}/${DOMINIO}"
 
-# Cria diretórios se não existirem
 sudo mkdir -p "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 
-# Cria configuração HTTP temporária (sem SSL)
+# Arquivo temporário HTTP apenas
 sudo tee "$NGINX_CONF" > /dev/null <<EOF
 server {
     listen 80;
@@ -344,25 +343,19 @@ sudo ln -sf "$NGINX_CONF" "$NGINX_ENABLED/$DOMINIO"
 sudo rm -f "$NGINX_ENABLED/default"
 
 # Testa e inicia Nginx
-if sudo nginx -t; then
-    sudo systemctl restart nginx
-    echo "Nginx HTTP configurado e iniciado com sucesso."
-else
-    echo "Erro na configuração HTTP do Nginx."
-    exit 1
-fi
+sudo nginx -t && sudo systemctl restart nginx
 
 # ================================
-# EMISSÃO DO CERTIFICADO SSL COM CERTBOT
+# EMISSÃO DO CERTIFICADO SSL
 # ================================
 if [ ! -f "/etc/letsencrypt/live/$DOMINIO/fullchain.pem" ]; then
-    echo "Emitindo certificado SSL para $DOMINIO..."
+    echo "Emitindo certificado SSL..."
     sudo certbot --nginx -d "$DOMINIO" -d "$DOMINIO_WWW" \
         --non-interactive --agree-tos -m "$EMAIL_CERTBOT"
 fi
 
 # ================================
-# CONFIGURAÇÃO DEFINITIVA NGINX COM SSL
+# CONFIGURAÇÃO DEFINITIVA NGINX (HTTPS)
 # ================================
 sudo tee "$NGINX_CONF" > /dev/null <<EOF
 server {
@@ -395,14 +388,7 @@ server {
 }
 EOF
 
-# Testa e recarrega configuração final
-if sudo nginx -t; then
-    sudo systemctl reload nginx
-    echo "Nginx HTTPS configurado com sucesso."
-else
-    echo "Erro na configuração HTTPS do Nginx. Verifique $NGINX_CONF"
-    exit 1
-fi
+sudo nginx -t && sudo systemctl reload nginx
 
 # ================================
 # GUNICORN SERVICE
