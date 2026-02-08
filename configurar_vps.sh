@@ -141,6 +141,15 @@ CONFIG_FILE="${CONFIG_PATH}/${NOME_SITE}.config"
 LOG_PATH="/var/log/${NOME_SITE}"
 NGINX_CONF="/etc/nginx/sites-available/${DOMINIO}"
 
+# Cria diretórios se não existirem
+sudo mkdir -p "$SITE_DIR"
+sudo mkdir -p "$CONFIG_PATH"
+sudo mkdir -p "$LOG_PATH"
+sudo mkdir -p "$(dirname "$NGINX_CONF")"
+
+# Ajusta permissões para o usuário atual
+sudo chown -R $USER:$USER "$SITE_DIR" "$CONFIG_PATH" "$LOG_PATH"
+
 # ================================
 # CRIA BANCO DE DADOS E USUÁRIO MYSQL
 # ================================
