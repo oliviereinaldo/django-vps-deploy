@@ -133,58 +133,53 @@ rm -rf "$TEMP_VENV"
 export $(grep -v '^#' .env | xargs)
 
 # ================================
-# LIMPEZA DE EXECUÇÕES ANTERIORES
+# LIMPEZA COMPLETA DE EXECUÇÃO ANTERIOR
 # ================================
 SITE_DIR="/var/www/$NOME_SITE"
 NGINX_AVAILABLE="/etc/nginx/sites-available/$DOMINIO"
 NGINX_ENABLED="/etc/nginx/sites-enabled/$DOMINIO"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
-# Para serviço systemd se existir
+# Para e remove serviço systemd
 if systemctl list-unit-files | grep -q "${SERVICE_NAME}.service"; then
-    echo "Parando serviço systemd antigo..."
+    echo "Parando e removendo service systemd..."
     sudo systemctl stop "${SERVICE_NAME}.service" || true
     sudo systemctl disable "${SERVICE_NAME}.service" || true
-fi
-
-# Remove service antigo
-if [ -f "$SERVICE_FILE" ]; then
-    echo "Removendo service systemd antigo..."
     sudo rm -f "$SERVICE_FILE"
     sudo systemctl daemon-reexec
     sudo systemctl daemon-reload
 fi
 
-# Remove configs Nginx do domínio
+# Remove configurações Nginx do domínio
 if [ -f "$NGINX_ENABLED" ]; then
     echo "Removendo symlink Nginx..."
     sudo rm -f "$NGINX_ENABLED"
 fi
 
 if [ -f "$NGINX_AVAILABLE" ]; then
-    echo "Removendo config Nginx antiga..."
+    echo "Removendo config Nginx..."
     sudo rm -f "$NGINX_AVAILABLE"
 fi
 
-# Remove socket antigo do Gunicorn
-if [ -f "$SITE_DIR/gunicorn.sock" ]; then
-    echo "Removendo gunicorn.sock antigo..."
-    sudo rm -f "$SITE_DIR/gunicorn.sock"
+# Remove projeto Django inteiro (código + venv + socket)
+if [ -d "$SITE_DIR" ]; then
+    echo "Removendo projeto Django em $SITE_DIR..."
+    sudo rm -rf "$SITE_DIR"
 fi
 
 # Limpa logs antigos
 if [ -d "/var/log/$NOME_SITE" ]; then
     echo "Limpando logs antigos..."
-    sudo rm -f /var/log/$NOME_SITE/*.log || true
+    sudo rm -rf "/var/log/$NOME_SITE"
 fi
 
 # Testa e recarrega Nginx se existir
 if command -v nginx >/dev/null 2>&1; then
-    echo "Validando configuração do Nginx..."
+    echo "Validando Nginx após limpeza..."
     sudo nginx -t && sudo systemctl reload nginx || true
 fi
 
-echo "Limpeza concluída."
+echo "Limpeza concluída com sucesso."
 
 # ================================
 # PATHS E DIRETÓRIOS
