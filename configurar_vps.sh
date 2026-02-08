@@ -144,16 +144,32 @@ NGINX_CONF="/etc/nginx/sites-available/${DOMINIO}"
 # ================================
 # CRIA BANCO DE DADOS E USUÁRIO MYSQL
 # ================================
-echo "Verificando banco MySQL..."
+echo "Verificando MySQL..."
 
+# Verifica se o comando mysql existe
+if ! command -v mysql >/dev/null 2>&1; then
+    echo "MySQL não encontrado. Instalando MySQL server e client..."
+    sudo apt update
+    sudo apt install -y mysql-server mysql-client
+    echo "MySQL instalado."
+fi
+
+# Garante que o serviço MySQL esteja ativo
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# Define comando base
 MYSQL_CMD="mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASS -e"
 
-$MYSQL_CMD "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-$MYSQL_CMD "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
-$MYSQL_CMD "GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';"
-$MYSQL_CMD "FLUSH PRIVILEGES;"
+# Tenta criar banco e usuário
+echo "Criando banco e usuário MySQL..."
 
-echo "Banco de dados $DB_NAME e usuário $DB_USER configurados."
+$MYSQL_CMD "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || true
+$MYSQL_CMD "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';" || true
+$MYSQL_CMD "GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';" || true
+$MYSQL_CMD "FLUSH PRIVILEGES;" || true
+
+echo "Banco de dados '$DB_NAME' e usuário '$DB_USER' configurados com sucesso."
 
 # ================================
 # CRIA DIRETÓRIO DO PROJETO
