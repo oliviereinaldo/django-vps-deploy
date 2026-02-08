@@ -6,11 +6,27 @@ set -euo pipefail
 # ================================
 echo "Verificando Python3, pip e venv..."
 
-# Atualiza repositórios e instala todos os pacotes essenciais de uma vez
+# Atualiza repositórios
 sudo apt update
-sudo apt install -y python3 python3-pip python3-venv python3-distutils python3-setuptools
 
-echo "Python3, pip e venv instalados e prontos para uso."
+# Instala Python3, pip e venv
+sudo apt install -y python3 python3-pip python3-venv python3-setuptools
+
+# Se pip ainda não estiver disponível, força instalação com ensurepip
+if ! python3 -m pip --version >/dev/null 2>&1; then
+    echo "pip não encontrado, instalando via ensurepip..."
+    python3 -m ensurepip --upgrade
+fi
+
+# Verifica se venv funciona criando um teste rápido
+TEMP_TEST_VENV="./venv_test_check"
+if ! python3 -m venv "$TEMP_TEST_VENV" >/dev/null 2>&1; then
+    echo "Erro: venv ainda não funciona. Certifique-se de que python3-venv está corretamente instalado."
+    exit 1
+fi
+rm -rf "$TEMP_TEST_VENV"
+
+echo "Python3, pip e venv disponíveis."
 
 # ================================
 # REMOVE VENV TEMPORÁRIO ANTIGO
