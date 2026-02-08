@@ -321,9 +321,10 @@ NGINX_AVAILABLE="/etc/nginx/sites-available"
 NGINX_ENABLED="/etc/nginx/sites-enabled"
 NGINX_CONF="${NGINX_AVAILABLE}/${DOMINIO}"
 
+echo "Criando diretórios do Nginx se não existirem..."
 sudo mkdir -p "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 
-# Arquivo temporário HTTP apenas
+echo "Criando arquivo de configuração temporária HTTP para $DOMINIO..."
 sudo tee "$NGINX_CONF" > /dev/null <<EOF
 server {
     listen 80;
@@ -338,12 +339,23 @@ server {
     }
 }
 EOF
+echo "Arquivo $NGINX_CONF criado."
 
+echo "Criando link simbólico em sites-enabled..."
 sudo ln -sf "$NGINX_CONF" "$NGINX_ENABLED/$DOMINIO"
+
+echo "Removendo configuração default se existir..."
 sudo rm -f "$NGINX_ENABLED/default"
 
-# Testa e inicia Nginx
-sudo nginx -t && sudo systemctl restart nginx
+echo "Testando configuração Nginx..."
+if sudo nginx -t; then
+    echo "Configuração válida. Reiniciando Nginx..."
+    sudo systemctl restart nginx
+    echo "Nginx reiniciado com sucesso."
+else
+    echo "Erro na configuração temporária do Nginx. Verifique o arquivo $NGINX_CONF"
+    exit 1
+fi
 
 # ================================
 # EMISSÃO DO CERTIFICADO SSL
