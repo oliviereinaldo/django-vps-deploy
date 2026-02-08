@@ -293,6 +293,17 @@ sudo chown www-data:www-data "$LOG_PATH"/*.log
 sudo chmod 640 "$LOG_PATH"/*.log
 
 # ================================
+# INSTALA NGINX SE NÃO EXISTIR
+# ================================
+if ! command -v nginx >/dev/null 2>&1; then
+    echo "Nginx não encontrado. Instalando Nginx..."
+    sudo apt update
+    sudo apt install -y nginx
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
+fi
+
+# ================================
 # CONFIGURAÇÃO TEMPORÁRIA NGINX
 # ================================
 NGINX_AVAILABLE="/etc/nginx/sites-available"
