@@ -315,17 +315,6 @@ if ! command -v nginx >/dev/null 2>&1; then
 fi
 
 # ================================
-# INSTALA NGINX SE NÃO EXISTIR
-# ================================
-if ! command -v nginx >/dev/null 2>&1; then
-    echo "Nginx não encontrado. Instalando Nginx..."
-    sudo apt update
-    sudo apt install -y nginx
-    sudo systemctl enable nginx
-    sudo systemctl start nginx
-fi
-
-# ================================
 # CONFIGURAÇÃO TEMPORÁRIA NGINX (HTTP)
 # ================================
 NGINX_AVAILABLE="/etc/nginx/sites-available"
@@ -335,7 +324,7 @@ NGINX_CONF="${NGINX_AVAILABLE}/${DOMINIO}"
 # Cria diretórios se não existirem
 sudo mkdir -p "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 
-# Cria arquivo de configuração temporária (HTTP)
+# Cria arquivo de configuração temporária (HTTP apenas)
 sudo tee "$NGINX_CONF" > /dev/null <<EOF
 server {
     listen 80;
@@ -357,9 +346,9 @@ sudo ln -sf "$NGINX_CONF" "$NGINX_ENABLED/$DOMINIO"
 # Remove configuração default se existir
 sudo rm -f "$NGINX_ENABLED/default"
 
-# Testa configuração e recarrega Nginx
+# Testa configuração HTTP e recarrega Nginx
 if sudo nginx -t; then
-    sudo systemctl reload nginx
+    sudo systemctl restart nginx
     echo "Nginx HTTP configurado e recarregado com sucesso."
 else
     echo "Erro na configuração temporária do Nginx. Verifique o arquivo $NGINX_CONF"
@@ -367,7 +356,7 @@ else
 fi
 
 # ================================
-# EMISSÃO IDÊNTICA DE CERTIFICADO SSL COM CERTBOT
+# EMISSÃO DE CERTIFICADO SSL COM CERTBOT
 # ================================
 CERT_PATH="/etc/letsencrypt/live/$DOMINIO/fullchain.pem"
 
@@ -380,6 +369,7 @@ else
         echo "Certificado emitido com sucesso."
     else
         echo "Falha na emissão do certificado. Verifique DNS, porta 80 aberta ou limite da Let's Encrypt."
+        exit 1
     fi
 fi
 
@@ -417,7 +407,14 @@ server {
 }
 EOF
 
-sudo nginx -t && sudo systemctl reload nginx
+# Testa configuração final e recarrega Nginx
+if sudo nginx -t; then
+    sudo systemctl reload nginx
+    echo "Nginx HTTPS configurado e recarregado com sucesso."
+else
+    echo "Erro na configuração definitiva do Nginx com SSL. Verifique o arquivo $NGINX_CONF"
+    exit 1
+fi
 
 # ================================
 # GUNICORN SERVICE
