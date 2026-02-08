@@ -315,7 +315,18 @@ if ! command -v nginx >/dev/null 2>&1; then
 fi
 
 # ================================
-# CONFIGURAÇÃO TEMPORÁRIA NGINX
+# INSTALA NGINX SE NÃO EXISTIR
+# ================================
+if ! command -v nginx >/dev/null 2>&1; then
+    echo "Nginx não encontrado. Instalando Nginx..."
+    sudo apt update
+    sudo apt install -y nginx
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
+fi
+
+# ================================
+# CONFIGURAÇÃO TEMPORÁRIA NGINX (HTTP)
 # ================================
 NGINX_AVAILABLE="/etc/nginx/sites-available"
 NGINX_ENABLED="/etc/nginx/sites-enabled"
@@ -324,7 +335,7 @@ NGINX_CONF="${NGINX_AVAILABLE}/${DOMINIO}"
 # Cria diretórios se não existirem
 sudo mkdir -p "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 
-# Cria arquivo de configuração do site
+# Cria arquivo de configuração temporária (HTTP)
 sudo tee "$NGINX_CONF" > /dev/null <<EOF
 server {
     listen 80;
@@ -347,7 +358,13 @@ sudo ln -sf "$NGINX_CONF" "$NGINX_ENABLED/$DOMINIO"
 sudo rm -f "$NGINX_ENABLED/default"
 
 # Testa configuração e recarrega Nginx
-sudo nginx -t && sudo systemctl reload nginx
+if sudo nginx -t; then
+    sudo systemctl reload nginx
+    echo "Nginx HTTP configurado e recarregado com sucesso."
+else
+    echo "Erro na configuração temporária do Nginx. Verifique o arquivo $NGINX_CONF"
+    exit 1
+fi
 
 # ================================
 # EMISSÃO IDÊNTICA DE CERTIFICADO SSL COM CERTBOT
