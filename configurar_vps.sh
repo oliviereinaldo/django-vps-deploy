@@ -295,6 +295,14 @@ sudo chmod 640 "$LOG_PATH"/*.log
 # ================================
 # CONFIGURAÇÃO TEMPORÁRIA NGINX
 # ================================
+NGINX_AVAILABLE="/etc/nginx/sites-available"
+NGINX_ENABLED="/etc/nginx/sites-enabled"
+NGINX_CONF="${NGINX_AVAILABLE}/${DOMINIO}"
+
+# Cria diretórios se não existirem
+sudo mkdir -p "$NGINX_AVAILABLE" "$NGINX_ENABLED"
+
+# Cria arquivo de configuração do site
 sudo tee "$NGINX_CONF" > /dev/null <<EOF
 server {
     listen 80;
@@ -310,8 +318,13 @@ server {
 }
 EOF
 
-sudo ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
+# Cria link simbólico seguro
+sudo ln -sf "$NGINX_CONF" "$NGINX_ENABLED/$DOMINIO"
+
+# Remove configuração default se existir
+sudo rm -f "$NGINX_ENABLED/default"
+
+# Testa configuração e recarrega Nginx
 sudo nginx -t && sudo systemctl reload nginx
 
 # ================================
