@@ -133,6 +133,60 @@ rm -rf "$TEMP_VENV"
 export $(grep -v '^#' .env | xargs)
 
 # ================================
+# LIMPEZA DE EXECUÇÕES ANTERIORES
+# ================================
+SITE_DIR="/var/www/$NOME_SITE"
+NGINX_AVAILABLE="/etc/nginx/sites-available/$DOMINIO"
+NGINX_ENABLED="/etc/nginx/sites-enabled/$DOMINIO"
+SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+
+# Para serviço systemd se existir
+if systemctl list-unit-files | grep -q "${SERVICE_NAME}.service"; then
+    echo "Parando serviço systemd antigo..."
+    sudo systemctl stop "${SERVICE_NAME}.service" || true
+    sudo systemctl disable "${SERVICE_NAME}.service" || true
+fi
+
+# Remove service antigo
+if [ -f "$SERVICE_FILE" ]; then
+    echo "Removendo service systemd antigo..."
+    sudo rm -f "$SERVICE_FILE"
+    sudo systemctl daemon-reexec
+    sudo systemctl daemon-reload
+fi
+
+# Remove configs Nginx do domínio
+if [ -f "$NGINX_ENABLED" ]; then
+    echo "Removendo symlink Nginx..."
+    sudo rm -f "$NGINX_ENABLED"
+fi
+
+if [ -f "$NGINX_AVAILABLE" ]; then
+    echo "Removendo config Nginx antiga..."
+    sudo rm -f "$NGINX_AVAILABLE"
+fi
+
+# Remove socket antigo do Gunicorn
+if [ -f "$SITE_DIR/gunicorn.sock" ]; then
+    echo "Removendo gunicorn.sock antigo..."
+    sudo rm -f "$SITE_DIR/gunicorn.sock"
+fi
+
+# Limpa logs antigos
+if [ -d "/var/log/$NOME_SITE" ]; then
+    echo "Limpando logs antigos..."
+    sudo rm -f /var/log/$NOME_SITE/*.log || true
+fi
+
+# Testa e recarrega Nginx se existir
+if command -v nginx >/dev/null 2>&1; then
+    echo "Validando configuração do Nginx..."
+    sudo nginx -t && sudo systemctl reload nginx || true
+fi
+
+echo "Limpeza concluída."
+
+# ================================
 # PATHS E DIRETÓRIOS
 # ================================
 SITE_DIR="/var/www/$NOME_SITE"
