@@ -310,22 +310,21 @@ if ! command -v nginx >/dev/null 2>&1; then
     echo "Nginx não encontrado. Instalando Nginx..."
     sudo apt update
     sudo apt install -y nginx
-    sudo systemctl enable nginx
-    sudo systemctl start nginx
 fi
 
-# ================================
-# CONFIGURAÇÃO TEMPORÁRIA NGINX (HTTP)
-# ================================
-NGINX_AVAILABLE="/etc/nginx/sites-available"
-NGINX_ENABLED="/etc/nginx/sites-enabled"
-NGINX_CONF="${NGINX_AVAILABLE}/${DOMINIO}"
+# Remove qualquer configuração antiga que dependa de SSL inexistente
+sudo rm -f /etc/nginx/sites-enabled/* /etc/nginx/sites-available/*
 
-echo "Criando diretórios do Nginx se não existirem..."
-sudo mkdir -p "$NGINX_AVAILABLE" "$NGINX_ENABLED"
+# Cria diretórios de sites se não existirem
+sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
 
-echo "Criando arquivo de configuração temporária HTTP para $DOMINIO..."
-sudo tee "$NGINX_CONF" > /dev/null <<EOF
+# ================================
+# CONFIGURAÇÃO TEMPORÁRIA HTTP
+# ================================
+TEMP_CONF="/etc/nginx/sites-available/${DOMINIO}"
+
+echo "Criando configuração temporária HTTP..."
+sudo tee "$TEMP_CONF" > /dev/null <<EOF
 server {
     listen 80;
     server_name $DOMINIO $DOMINIO_WWW;
@@ -339,21 +338,15 @@ server {
     }
 }
 EOF
-echo "Arquivo $NGINX_CONF criado."
 
-echo "Criando link simbólico em sites-enabled..."
-sudo ln -sf "$NGINX_CONF" "$NGINX_ENABLED/$DOMINIO"
-
-echo "Removendo configuração default se existir..."
-sudo rm -f "$NGINX_ENABLED/default"
+sudo ln -sf "$TEMP_CONF" /etc/nginx/sites-enabled/
 
 echo "Testando configuração Nginx..."
 if sudo nginx -t; then
-    echo "Configuração válida. Reiniciando Nginx..."
+    echo "Configuração válida. Iniciando Nginx..."
     sudo systemctl restart nginx
-    echo "Nginx reiniciado com sucesso."
 else
-    echo "Erro na configuração temporária do Nginx. Verifique o arquivo $NGINX_CONF"
+    echo "Erro na configuração temporária do Nginx. Saindo..."
     exit 1
 fi
 
