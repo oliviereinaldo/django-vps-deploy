@@ -240,31 +240,32 @@ sudo chmod 640 "$CONFIG_FILE"
 sudo chown root:www-data "$CONFIG_FILE"
 
 # ================================
-# AJUSTA settings.py PARA USAR CONFIG
+# AJUSTA settings.py PARA USAR VARIÁVEIS DE AMBIENTE
 # ================================
 sed -i "/SECRET_KEY =/d" "$SETTINGS"
 cat <<EOL >> "$SETTINGS"
 
-import configparser
 import os
 
-config = configparser.ConfigParser(interpolation=None)
-config.read('$CONFIG_FILE')
+# Chave secreta Django
+SECRET_KEY = os.getenv('SECRET_KEY_DJANGO')
 
-SECRET_KEY = config['django']['secret_key']
-
+# Banco de dados MySQL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config['database']['name'],
-        'USER': config['database']['user'],
-        'PASSWORD': config['database']['password'],
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASS'),
         'HOST': 'localhost',
         'PORT': '3306',
     }
 }
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+LOG_PATH = os.getenv('LOG_PATH', os.path.join(BASE_DIR, 'logs'))
+os.makedirs(LOG_PATH, exist_ok=True)
 
 LOGGING = {
     'version': 1,
@@ -273,8 +274,18 @@ LOGGING = {
         'verbose': {'format': '{levelname} {asctime} {module} {message}', 'style': '{'},
     },
     'handlers': {
-        'file': {'level': 'ERROR', 'class': 'logging.FileHandler', 'filename': '$LOG_PATH/error.log', 'formatter': 'verbose'},
-        'app_debug': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filename': '$LOG_PATH/app_debug.log', 'formatter': 'verbose'},
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_PATH, 'error.log'),
+            'formatter': 'verbose'
+        },
+        'app_debug': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_PATH, 'app_debug.log'),
+            'formatter': 'verbose'
+        },
     },
     'loggers': {
         'django': {'handlers': ['file'], 'level': 'ERROR', 'propagate': True},
