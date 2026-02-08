@@ -324,7 +324,7 @@ NGINX_CONF="${NGINX_AVAILABLE}/${DOMINIO}"
 # Cria diretórios se não existirem
 sudo mkdir -p "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 
-# Cria arquivo de configuração temporária (HTTP apenas)
+# Cria configuração HTTP temporária (sem SSL)
 sudo tee "$NGINX_CONF" > /dev/null <<EOF
 server {
     listen 80;
@@ -340,41 +340,29 @@ server {
 }
 EOF
 
-# Cria link simbólico seguro
 sudo ln -sf "$NGINX_CONF" "$NGINX_ENABLED/$DOMINIO"
-
-# Remove configuração default se existir
 sudo rm -f "$NGINX_ENABLED/default"
 
-# Testa configuração HTTP e recarrega Nginx
+# Testa e inicia Nginx
 if sudo nginx -t; then
     sudo systemctl restart nginx
-    echo "Nginx HTTP configurado e recarregado com sucesso."
+    echo "Nginx HTTP configurado e iniciado com sucesso."
 else
-    echo "Erro na configuração temporária do Nginx. Verifique o arquivo $NGINX_CONF"
+    echo "Erro na configuração HTTP do Nginx."
     exit 1
 fi
 
 # ================================
-# EMISSÃO DE CERTIFICADO SSL COM CERTBOT
+# EMISSÃO DO CERTIFICADO SSL COM CERTBOT
 # ================================
-CERT_PATH="/etc/letsencrypt/live/$DOMINIO/fullchain.pem"
-
-if [ -f "$CERT_PATH" ]; then
-    echo "Certificado SSL para $DOMINIO já existe. Pulando emissão."
-else
-    echo "Emitindo certificado SSL para $DOMINIO e $DOMINIO_WWW..."
-    if sudo certbot --nginx -d "$DOMINIO" -d "$DOMINIO_WWW" \
-        --non-interactive --agree-tos -m "$EMAIL_CERTBOT"; then
-        echo "Certificado emitido com sucesso."
-    else
-        echo "Falha na emissão do certificado. Verifique DNS, porta 80 aberta ou limite da Let's Encrypt."
-        exit 1
-    fi
+if [ ! -f "/etc/letsencrypt/live/$DOMINIO/fullchain.pem" ]; then
+    echo "Emitindo certificado SSL para $DOMINIO..."
+    sudo certbot --nginx -d "$DOMINIO" -d "$DOMINIO_WWW" \
+        --non-interactive --agree-tos -m "$EMAIL_CERTBOT"
 fi
 
 # ================================
-# CONFIGURAÇÃO DEFINITIVA DO NGINX COM SSL
+# CONFIGURAÇÃO DEFINITIVA NGINX COM SSL
 # ================================
 sudo tee "$NGINX_CONF" > /dev/null <<EOF
 server {
@@ -407,12 +395,12 @@ server {
 }
 EOF
 
-# Testa configuração final e recarrega Nginx
+# Testa e recarrega configuração final
 if sudo nginx -t; then
     sudo systemctl reload nginx
-    echo "Nginx HTTPS configurado e recarregado com sucesso."
+    echo "Nginx HTTPS configurado com sucesso."
 else
-    echo "Erro na configuração definitiva do Nginx com SSL. Verifique o arquivo $NGINX_CONF"
+    echo "Erro na configuração HTTPS do Nginx. Verifique $NGINX_CONF"
     exit 1
 fi
 
