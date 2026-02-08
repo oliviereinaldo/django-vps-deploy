@@ -348,10 +348,27 @@ sudo nginx -t && sudo systemctl restart nginx
 # ================================
 # EMISSÃO DO CERTIFICADO SSL
 # ================================
-if [ ! -f "/etc/letsencrypt/live/$DOMINIO/fullchain.pem" ]; then
-    echo "Emitindo certificado SSL..."
-    sudo certbot --nginx -d "$DOMINIO" -d "$DOMINIO_WWW" \
-        --non-interactive --agree-tos -m "$EMAIL_CERTBOT"
+CERT_FULLCHAIN="/etc/letsencrypt/live/$DOMINIO/fullchain.pem"
+
+# Verifica se o Certbot está instalado
+if ! command -v certbot >/dev/null 2>&1; then
+    echo "Certbot não encontrado. Instalando Certbot..."
+    sudo apt update
+    sudo apt install -y certbot python3-certbot-nginx
+fi
+
+# Emite certificado apenas se não existir
+if [ ! -f "$CERT_FULLCHAIN" ]; then
+    echo "Emitindo certificado SSL para $DOMINIO e $DOMINIO_WWW..."
+    if sudo certbot --nginx -d "$DOMINIO" -d "$DOMINIO_WWW" \
+        --non-interactive --agree-tos -m "$EMAIL_CERTBOT"; then
+        echo "Certificado emitido com sucesso."
+    else
+        echo "Falha na emissão do certificado. Verifique DNS, porta 80 aberta ou limite da Let's Encrypt."
+        exit 1
+    fi
+else
+    echo "Certificado SSL para $DOMINIO já existe. Pulando emissão."
 fi
 
 # ================================
