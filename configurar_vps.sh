@@ -1,20 +1,26 @@
 #!/bin/bash
 set -euo pipefail
 
-# ================================
-# VERIFICA DEPENDÊNCIAS MÍNIMAS
-# ================================
 echo "Verificando Python3..."
 if ! command -v python3 >/dev/null 2>&1; then
     echo "Erro: Python3 não encontrado. Instale antes de continuar."
     exit 1
 fi
 
-# Verifica se pip e venv estão disponíveis
-if ! python3 -m pip --version >/dev/null 2>&1 || ! python3 -m venv --help >/dev/null 2>&1; then
-    echo "pip ou venv não encontrados. Instalando python3-pip e python3-venv..."
+# Verifica pip
+if ! python3 -m pip --version >/dev/null 2>&1; then
+    echo "pip não encontrado. Instalando python3-pip..."
     sudo apt update
-    sudo apt install -y python3-pip python3-venv
+    sudo apt install -y python3-pip
+fi
+
+# Verifica venv
+if ! python3 -m venv --help >/dev/null 2>&1; then
+    echo "python3-venv não encontrado. Instalando pacote correspondente..."
+    # Detecta versão exata do Python
+    PY_VER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+    sudo apt update
+    sudo apt install -y python${PY_VER}-venv
 fi
 
 # ================================
