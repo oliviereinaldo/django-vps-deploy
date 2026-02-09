@@ -299,56 +299,89 @@ sudo chown root:www-data "$CONFIG_FILE"
 # AJUSTA settings.py PARA USAR VARIÁVEIS DE AMBIENTE
 # ================================
 sed -i "/SECRET_KEY =/d" "$SETTINGS"
-cat <<EOL >> "$SETTINGS"
+cat <<'EOL' >> "$SETTINGS"
 
 import os
 
-# Chave secreta Django
-SECRET_KEY = os.getenv('SECRET_KEY_DJANGO')
+# ================================
+# SEGURANÇA
+# ================================
+SECRET_KEY = os.getenv("SECRET_KEY_DJANGO")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY_DJANGO não definido no ambiente")
 
-# Banco de dados MySQL
+# ================================
+# BANCO DE DADOS
+# ================================
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASS'),
-        'HOST': 'localhost',
-        'PORT': '3306',
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASS"),
+        "HOST": "localhost",
+        "PORT": "3306",
     }
 }
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# ================================
+# STATIC FILES
+# ================================
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-LOG_PATH = os.getenv('LOG_PATH', os.path.join(BASE_DIR, 'logs'))
-os.makedirs(LOG_PATH, exist_ok=True)
+# ================================
+# LOGGING (PRODUÇÃO SAFE)
+# ================================
+LOG_PATH = os.getenv("DJANGO_LOG_PATH")
+
+if not LOG_PATH:
+    raise RuntimeError("DJANGO_LOG_PATH não definido no ambiente")
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {'format': '{levelname} {asctime} {module} {message}', 'style': '{'},
-    },
-    'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_PATH, 'error.log'),
-            'formatter': 'verbose'
-        },
-        'app_debug': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_PATH, 'app_debug.log'),
-            'formatter': 'verbose'
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        "verbose": {
+            "format": "[{asctime}] {levelname} {name}: {message}",
+            "style": "{",
         },
     },
-    'loggers': {
-        'django': {'handlers': ['file'], 'level': 'ERROR', 'propagate': True},
-        'app': {'handlers': ['app_debug'], 'level': 'DEBUG', 'propagate': False},
+
+    "handlers": {
+        "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": os.path.join(LOG_PATH, "django-error.log"),
+            "formatter": "verbose",
+        },
+        "app_debug": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": os.path.join(LOG_PATH, "app-debug.log"),
+            "formatter": "verbose",
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+
+    "loggers": {
+        "django": {
+            "handlers": ["file", "console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "app": {
+            "handlers": ["app_debug", "console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
     },
 }
 EOL
+
 
 # ================================
 # CRIA STATIC E LOGS
