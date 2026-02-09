@@ -512,6 +512,9 @@ sudo nginx -t && sudo systemctl reload nginx
 # ================================
 # GUNICORN SERVICE
 # ================================
+
+# Código pode ficar com o usuário atual ou www-data
+# (aqui mantemos www-data para evitar problemas de permissão)
 sudo chown -R www-data:www-data "$SITE_DIR"
 sudo chmod 755 "$SITE_DIR"
 
@@ -523,17 +526,30 @@ After=network.target
 [Service]
 User=www-data
 Group=www-data
+
 WorkingDirectory=$SITE_DIR
-ExecStart=$SITE_DIR/venv_${NOME_SITE}/bin/gunicorn --access-logfile - --workers 3 --bind unix:$SITE_DIR/gunicorn.sock --umask 007 $PROJETO.wsgi:application
+
+# >>> VARIÁVEIS DE AMBIENTE DO DJANGO <<<
+EnvironmentFile=/etc/config_${NOME_SITE}/${NOME_SITE}.config
+
+ExecStart=$SITE_DIR/venv_${NOME_SITE}/bin/gunicorn \
+  --access-logfile - \
+  --workers 3 \
+  --bind unix:$SITE_DIR/gunicorn.sock \
+  --umask 007 \
+  $PROJETO.wsgi:application
+
 Restart=on-failure
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
+# Recarrega e sobe o serviço
 sudo systemctl daemon-reload
 sudo systemctl enable "$SERVICE_NAME"
-sudo systemctl start "$SERVICE_NAME"
+sudo systemctl restart "$SERVICE_NAME"
 
 # ================================
 # CRIAÇÃO DO APP
