@@ -187,24 +187,29 @@ echo "Limpeza concluída com sucesso."
 SITE_DIR="/var/www/$NOME_SITE"
 CONFIG_PATH="/etc/config_${NOME_SITE}"
 CONFIG_FILE="${CONFIG_PATH}/${NOME_SITE}.config"
-LOG_PATH="/var/log/${NOME_SITE}"
+
+# Variáveis de runtime
+DJANGO_LOG_PATH="/var/log/${NOME_SITE}"
 RUNTIME_DIR="/run/${NOME_SITE}"
+
 NGINX_CONF="/etc/nginx/sites-available/${DOMINIO}"
 
+# Exporta para o ambiente (Django / gunicorn)
+export DJANGO_LOG_PATH
 
 # Cria diretórios se não existirem
 sudo mkdir -p "$SITE_DIR"
 sudo mkdir -p "$CONFIG_PATH"
-sudo mkdir -p "$LOG_PATH"
+sudo mkdir -p "$DJANGO_LOG_PATH"
 sudo mkdir -p "$RUNTIME_DIR"
 sudo mkdir -p "$(dirname "$NGINX_CONF")"
 
-# Ajusta permissões para o usuário atual
 # Código e config → usuário atual
-sudo chown -R $USER:$USER "$SITE_DIR" "$CONFIG_PATH"
+sudo chown -R "$USER:$USER" "$SITE_DIR" "$CONFIG_PATH"
+
 # Logs e runtime → www-data
-sudo chown -R www-data:www-data "$LOG_PATH" "$RUNTIME_DIR"
-sudo chmod 755 "$LOG_PATH" "$RUNTIME_DIR"
+sudo chown -R www-data:www-data "$DJANGO_LOG_PATH" "$RUNTIME_DIR"
+sudo chmod 755 "$DJANGO_LOG_PATH" "$RUNTIME_DIR"
 
 # ================================
 # CRIA BANCO DE DADOS E USUÁRIO MYSQL
