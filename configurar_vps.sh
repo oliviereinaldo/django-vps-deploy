@@ -117,6 +117,9 @@ MYSQL_ROOT_PASS=$MYSQL_ROOT_PASS
 
 # Chave secreta Django
 SECRET_KEY_DJANGO=$SECRET_KEY_DJANGO
+
+# Logs Django (OBRIGATÓRIO em produção)
+DJANGO_LOG_PATH=/var/log/$NOME_SITE
 EOF
 
     echo ".env criado com sucesso!"
