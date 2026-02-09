@@ -199,6 +199,11 @@ sudo mkdir -p "$(dirname "$NGINX_CONF")"
 # Ajusta permissões para o usuário atual
 sudo chown -R $USER:$USER "$SITE_DIR" "$CONFIG_PATH" "$LOG_PATH"
 
+# Logs e runtime: www-data
+sudo chown -R www-data:www-data "$LOG_PATH" "$RUNTIME_DIR"
+
+sudo chmod 755 "$LOG_PATH" "$RUNTIME_DIR"
+
 # ================================
 # CRIA BANCO DE DADOS E USUÁRIO MYSQL
 # ================================
