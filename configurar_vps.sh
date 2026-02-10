@@ -136,6 +136,24 @@ rm -rf "$TEMP_VENV"
 export $(grep -v '^#' .env | xargs)
 
 # ================================
+# CRIA ENV DO SYSTEMD (GUNICORN / DJANGO)
+# ================================
+ENV_DIR="/etc/config_${NOME_SITE}"
+ENV_FILE="${ENV_DIR}/${NOME_SITE}.config"
+
+sudo mkdir -p "$ENV_DIR"
+
+sudo tee "$ENV_FILE" > /dev/null <<EOF
+DJANGO_LOG_PATH=/var/log/${NOME_SITE}
+DJANGO_SETTINGS_MODULE=${PROJETO}.settings
+SECRET_KEY_DJANGO=${SECRET_KEY_DJANGO}
+EOF
+
+sudo chown root:root "$ENV_DIR" "$ENV_FILE"
+sudo chmod 755 "$ENV_DIR"
+sudo chmod 644 "$ENV_FILE"
+
+# ================================
 # LIMPEZA COMPLETA DE EXECUÇÃO ANTERIOR
 # ================================
 SITE_DIR="/var/www/$NOME_SITE"
