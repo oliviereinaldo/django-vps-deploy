@@ -412,19 +412,29 @@ EOL
 # ================================
 # CRIA STATIC E LOGS
 # ================================
+
 # Static
 mkdir -p "$SITE_DIR/staticfiles"
+
 # Logs
 sudo mkdir -p "$DJANGO_LOG_PATH"
-# Garante dono e permissão do diretório
+
+# Diretório de logs
 sudo chown www-data:www-data "$DJANGO_LOG_PATH"
-sudo chmod 755 "$DJANGO_LOG_PATH"
-# Cria arquivos de log se não existirem
+sudo chmod 750 "$DJANGO_LOG_PATH"
+
+# Cria arquivos de log como www-data
 sudo -u www-data touch \
   "$DJANGO_LOG_PATH/app_debug.log" \
   "$DJANGO_LOG_PATH/error.log"
-# Permissões dos arquivos
+
+# Dono e permissões dos arquivos
+sudo chown www-data:www-data "$DJANGO_LOG_PATH"/*.log
 sudo chmod 640 "$DJANGO_LOG_PATH"/*.log
+
+# ACL para usuário de deploy
+sudo setfacl -m u:$USER:rw "$DJANGO_LOG_PATH"/*.log
+sudo setfacl -d -m u:$USER:rw "$DJANGO_LOG_PATH"
 
 # ================================
 # INSTALA NGINX SE NÃO EXISTIR
