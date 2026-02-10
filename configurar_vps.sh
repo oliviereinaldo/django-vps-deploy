@@ -394,25 +394,23 @@ EOL
 # ================================
 # CRIA STATIC E LOGS
 # ================================
-
+# Static
 mkdir -p "$SITE_DIR/staticfiles"
-
+# Logs
 sudo mkdir -p "$DJANGO_LOG_PATH"
-
-# Dono correto do diretório
-sudo chown -R www-data:www-data "$DJANGO_LOG_PATH"
-
-# Permissões do diretório
-sudo chmod 750 "$DJANGO_LOG_PATH"
-
-# Cria os arquivos de log
-sudo touch "$DJANGO_LOG_PATH/error.log" "$DJANGO_LOG_PATH/app_debug.log"
-
-# Dono correto dos arquivos
-sudo chown www-data:www-data "$DJANGO_LOG_PATH"/*.log
-
-# Permissões seguras
+# Garante dono e permissão do diretório
+sudo chown www-data:www-data "$DJANGO_LOG_PATH"
+sudo chmod 755 "$DJANGO_LOG_PATH"
+# Cria arquivos de log se não existirem
+sudo -u www-data touch \
+  "$DJANGO_LOG_PATH/app_debug.log" \
+  "$DJANGO_LOG_PATH/error.log"
+# Permissões dos arquivos
 sudo chmod 640 "$DJANGO_LOG_PATH"/*.log
+
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl restart ocsr
 
 # ================================
 # INSTALA NGINX SE NÃO EXISTIR
