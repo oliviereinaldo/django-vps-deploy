@@ -408,6 +408,11 @@ LOGGING = {
 }
 EOL
 
+# ================================
+# DEPENDÊNCIAS DO SISTEMA
+# ================================
+sudo apt update
+sudo apt install -y acl
 
 # ================================
 # CRIA STATIC E LOGS
