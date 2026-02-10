@@ -395,10 +395,10 @@ EOL
 # CRIA STATIC E LOGS
 # ================================
 mkdir -p "$SITE_DIR/staticfiles"
-sudo mkdir -p "$LOG_PATH"
-sudo touch "$LOG_PATH/error.log" "$LOG_PATH/app_debug.log"
-sudo chown www-data:www-data "$LOG_PATH"/*.log
-sudo chmod 640 "$LOG_PATH"/*.log
+sudo mkdir -p "$DJANGO_LOG_PATH"
+sudo touch "$DJANGO_LOG_PATH/error.log" "$DJANGO_LOG_PATH/app_debug.log"
+sudo chown www-data:www-data "$DJANGO_LOG_PATH"/*.log
+sudo chmod 640 "$DJANGO_LOG_PATH"/*.log
 
 # ================================
 # INSTALA NGINX SE NÃO EXISTIR
