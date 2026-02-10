@@ -366,7 +366,7 @@ LOGGING = {
         "app_debug": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": os.path.join(LOG_PATH, "app-debug.log"),
+            "filename": os.path.join(LOG_PATH, "app_debug.log"),
             "formatter": "verbose",
         },
         "console": {
@@ -394,11 +394,16 @@ EOL
 # ================================
 # CRIA STATIC E LOGS
 # ================================
+
 mkdir -p "$SITE_DIR/staticfiles"
+
 sudo mkdir -p "$DJANGO_LOG_PATH"
+sudo chown www-data:www-data "$DJANGO_LOG_PATH"
+sudo chmod 2775 "$DJANGO_LOG_PATH"
+
 sudo touch "$DJANGO_LOG_PATH/error.log" "$DJANGO_LOG_PATH/app_debug.log"
 sudo chown www-data:www-data "$DJANGO_LOG_PATH"/*.log
-sudo chmod 640 "$DJANGO_LOG_PATH"/*.log
+sudo chmod 664 "$DJANGO_LOG_PATH"/*.log
 
 # ================================
 # INSTALA NGINX SE NÃO EXISTIR
