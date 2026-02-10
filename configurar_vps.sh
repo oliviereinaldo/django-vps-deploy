@@ -408,10 +408,6 @@ sudo -u www-data touch \
 # Permissões dos arquivos
 sudo chmod 640 "$DJANGO_LOG_PATH"/*.log
 
-sudo systemctl daemon-reexec
-sudo systemctl daemon-reload
-sudo systemctl restart ocsr
-
 # ================================
 # INSTALA NGINX SE NÃO EXISTIR
 # ================================
