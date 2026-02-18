@@ -4,9 +4,9 @@
 
 Automação para provisionamento e deploy de aplicação Django em ambiente VPS Linux, com foco em segurança básica, padronização e repetibilidade.
 
-## ================================
-## Visão Geral
-## ================================
+#### ================================
+#### Visão Geral
+#### ================================
 
 Este repositório contém:
 
@@ -16,18 +16,18 @@ Este repositório contém:
 
 O fluxo foi organizado para reduzir a superfície de ataque antes da publicação da aplicação.
 
-# ================================
-# Pré-requisitos
-# ================================
+#### ================================
+#### Pré-requisitos
+#### ================================
 
 - VPS com Ubuntu Server
 - Acesso inicial via SSH
 - Windows 10/11 com OpenSSH (ou ambiente compatível)
 - Git instalado localmente
 
-# ================================
-# Ordem de Execução
-# ================================
+#### ================================
+#### Ordem de Execução
+#### ================================
 
 A sequência abaixo deve ser respeitada.
 
@@ -59,9 +59,9 @@ chmod +x deploy_site.sh
 
 O script realiza a configuração automatizada do ambiente para execução da aplicação Django
 
-# ================================
-# Estrutura do Repositório
-# ================================
+#### ================================
+#### Estrutura do Repositório
+#### ================================
 
 django-vps-deploy/
 │
