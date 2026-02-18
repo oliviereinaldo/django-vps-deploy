@@ -1,12 +1,12 @@
-# ================================
-# Django VPS Deploy
-# ================================
+## ================================
+## Django VPS Deploy
+## ================================
 
 Automação para provisionamento e deploy de aplicação Django em ambiente VPS Linux, com foco em segurança básica, padronização e repetibilidade.
 
-# ================================
-# Visão Geral
-# ================================
+## ================================
+## Visão Geral
+## ================================
 
 Este repositório contém:
 
