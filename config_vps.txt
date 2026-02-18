@@ -100,6 +100,12 @@ PasswordAuthentication no
 PubkeyAuthentication yes
 ````
 
+Verifique e remova qualquer configuração conflitante em /etc/ssh/sshd_config.d/. Por exemplo, se existir:
+``` comando Bash
+sudo nano /etc/ssh/sshd_config.d/50-cloud-init.conf
+```
+Certifique-se de remover ou comentar qualquer linha que permita PasswordAuthentication yes ou acesso direto.
+
 Valide a configuração:
 
 ``` comando Bash
