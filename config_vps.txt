@@ -1,0 +1,146 @@
+# ================================
+# Hardening SSH VPS
+# ================================
+
+# Pré-requisitos
+
+* Windows 10/11 com OpenSSH
+* VS Code + extensão Remote – SSH
+* PowerShell ou Git Bash
+
+Verifique versão do SSH:
+
+``` comando PowerShell
+ssh -V
+``` 
+# ================================
+# Primeiro acesso à VPS (porta padrão)
+# ================================
+
+``` comando PowerShell
+ssh administrator@198.51.100.10
+``` 
+
+# ================================
+# Gerar chave SSH no Windows
+# ================================
+
+No Windows (PowerShell ou Git Bash):
+
+``` comando PowerShell
+ssh-keygen -t ed25519 -C "usuario@vps-exemplo"
+``` 
+
+* Aceite o caminho padrão: C:\Users\usuario.ssh\id_ed25519
+* Opcional: adicione uma passphrase para maior segurança
+
+# ================================
+#  Copiar chave para a VPS
+# ================================
+
+No Windows:
+
+``` comando PowerShell
+type C:\Users\usuario.ssh\id_ed25519.pub
+``` 
+
+No Ubuntu (VPS):
+
+``` comando Bash
+ssh administrator@198.51.100.10
+mkdir -p /home/administrator/.ssh
+chmod 700 /home/administrator/.ssh
+nano /home/administrator/.ssh/authorized_keys
+```
+
+* Cole a chave pública do Windows
+* Ajuste permissões:
+  chmod 600 /home/administrator/.ssh/authorized_keys
+  chown -R administrator:administrator /home/administrator/.ssh
+
+# ================================
+# Testar login por chave
+# ================================
+
+No Windows:
+
+``` comando PowerShell
+ssh -i C:\Users\usuario.ssh\id_ed25519 administrator@198.51.100.10
+```
+
+* Confirme que entra sem senha
+
+# ================================
+#  Configurar firewall (UFW)
+# ================================
+
+``` comando Bash
+sudo ufw allow 22/tcp         # porta SSH
+sudo ufw allow 80/tcp         # HTTP
+sudo ufw allow 443/tcp        # HTTPS
+sudo ufw enable
+sudo ufw reload
+sudo ufw status verbose
+``` 
+
+# ================================
+# Habilitar apenas login por chave e bloquear root
+# ================================
+
+``` comando Bash
+sudo nano /etc/ssh/sshd_config
+``` 
+
+Adicione/ajuste:
+
+```
+Port 22
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+````
+
+Valide a configuração:
+
+``` comando Bash
+sudo sshd -t
+```
+
+Reinicie o SSH:
+
+``` comando Bash
+sudo systemctl restart ssh
+``` 
+
+# ================================
+# Testar login por chave novamente
+# ================================
+
+``` comando PowerShell
+ssh -i C:\Users\usuario.ssh\id_ed25519 administrator@198.51.100.10
+``` 
+
+# ================================
+# Configurar VS Code Remote SSH
+# ================================
+
+F1 → Remote-SSH: Open Configuration File
+
+Adicione:
+Host vps-exemplo
+HostName 198.51.100.10
+User administrator
+Port 22
+IdentityFile C:\Users\usuario.ssh\id_ed25519
+
+* Conecte normalmente via VS Code
+
+# ================================
+#Resultado final
+# ================================
+
+* Login apenas por chave
+* Root bloqueado
+* Firewall ativo (SSH, HTTP, HTTPS)
+* Porta SSH padrão 22 mantida
+* Conexão segura para VS Code
