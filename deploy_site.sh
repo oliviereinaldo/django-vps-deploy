@@ -215,6 +215,10 @@ server {
     listen 80;
     server_name $DOMINIO $DOMINIO_WWW;
 
+    location /static/ {
+        alias $SITE_DIR/staticfiles/;
+    }
+
     location / {
         proxy_pass http://unix:$SITE_DIR/gunicorn.sock;
         proxy_set_header Host \$host;
